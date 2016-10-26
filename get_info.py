@@ -22,12 +22,14 @@ print('friends: '+nof.text)
 
 driver.get('https://www.facebook.com/friends/requests/')
 
-
-nopf = driver.find_element_by_css_selector('#u_0_1o > h2:nth-child(1)')
-friendrequests = ''
-for i in nopf.text:
-    if i in '0123456789':
-        friendrequests+=i
+try:
+    nopf = driver.find_element_by_css_selector('#u_0_1o > h2:nth-child(1)')
+    friendrequests = ''
+    for i in nopf.text:
+        if i in '0123456789':
+            friendrequests+=i
+except:
+    friendrequests='0'
 
 print('friend requests : '+friendrequests)
 
