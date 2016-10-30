@@ -21,8 +21,6 @@ style.configure('TButton',foreground="dark green",font="Times 20 bold italic",pa
 
 
 theButton = ttk.Button(frame,text="Important Button",command=open_msg_box)
-theButton['state']='disabled'
-theButton['state']='normal'
 theButton.pack()
 
 frame.pack()
