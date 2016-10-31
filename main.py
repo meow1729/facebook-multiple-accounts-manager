@@ -47,6 +47,10 @@ add_id_button.grid(row=0,column=0)
 
 group_list = Listbox(root,height=15)
 group_list.grid(row=1,column=0)
+for item in ["All accounts", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four"]:
+    group_list.insert(END, item)
+#group_list.delete(0, END)
+
 ttk.Button(root,text="Delete selected group").grid(row=2,column=0)
 ttk.Button(root,text="Expand Selected Group").grid(row=3,column=0)
 ttk.Separator(root,orient=HORIZONTAL).grid(row=4, columnspan=8, sticky="ew")
