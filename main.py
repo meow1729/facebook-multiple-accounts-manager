@@ -2,6 +2,21 @@ from tkinter import *
 from tkinter import messagebox # for displaying messagebox
 from tkinter import ttk # for styling
 from tkinter import Text
+import sqlite3
+
+
+def setup_db():
+    pass
+
+def update_group_list():
+    pass
+
+def load_group():
+    pass
+
+
+
+
 
 def quit_app():
     root.quit()
@@ -46,7 +61,7 @@ root.configure(background='#3b5998')
 add_id_button = ttk.Button(root,text="Add New Account",command=new_id_pressed,width=30)
 add_id_button.grid(row=0,column=0)
 
-# ........... list box
+# ........... list box ................
 def trigger(event=None):
     print('triggered!')
     meow = group_list.get(group_list.curselection()[0])
@@ -72,7 +87,7 @@ ttk.Separator(root,orient=VERTICAL).grid(column=4,row=0, rowspan=8, sticky="ns")
 
 var = StringVar(root,value="")
 var.set('status of selected group:\n None selected\n It has 0 ids')
-Label(textvariable=var,background='green').grid(row=5)
+Label(textvariable=var,background='light green').grid(row=5)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -82,7 +97,7 @@ Label(textvariable=var,background='green').grid(row=5)
 # the right side ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 label_1 = Label(text="Enter your message/post here:",height = 5,background='#3b5998',font=(("Helvetica", 16,'bold')) )
 label_1.grid(row=0,column=5,columnspan=5)
-box = Text(root,height=8,width=70,pady=10,padx=10,highlightbackground="black",background="yellow",font = "Helvetica 20 bold")
+box = Text(root,height=8,width=70,pady=10,padx=10,highlightbackground="black",background="light blue",font = "Helvetica 20 bold")
 box.grid(row=1,column = 5,columnspan=5)
 ttk.Button(root,text='Message to all friends').grid(row=2,column=5)
 ttk.Button(root,text='Post to the wall').grid(row=2,column=6,ipady=10)
