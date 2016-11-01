@@ -41,15 +41,26 @@ root.config(menu=the_menu)
 #~~~~~~~~~~~~~~~~~ MENU BAR ENDS ~~~~~~~~~~~~~~~~~~
 root.configure(background='#3b5998')
 
+
 # the left side ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 add_id_button = ttk.Button(root,text="Add New Account",command=new_id_pressed,width=30)
 add_id_button.grid(row=0,column=0)
 
+# ........... list box
+def trigger(event=None):
+    print('triggered!')
+    meow = group_list.get(group_list.curselection()[0])
+    var.set('status of selected group:\n '+ meow + ' selected\n It has n ids')
 group_list = Listbox(root,height=15,background="pink")
 group_list.grid(row=1,column=0)
 for item in ["All accounts", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four"]:
     group_list.insert(END, item)
+
+group_list.bind('<<ListboxSelect>>',trigger)
+
 #group_list.delete(0, END)
+
+# .............. list box
 
 ttk.Button(root,text="Delete selected group").grid(row=2,column=0)
 ttk.Button(root,text="Expand Selected Group").grid(row=3,column=0)
@@ -59,10 +70,8 @@ ttk.Separator(root,orient=VERTICAL).grid(column=2,row=0, rowspan=8, sticky="ns")
 ttk.Separator(root,orient=VERTICAL).grid(column=3,row=0, rowspan=8, sticky="ns")
 ttk.Separator(root,orient=VERTICAL).grid(column=4,row=0, rowspan=8, sticky="ns")
 
-
-
 var = StringVar(root,value="")
-var.set('status of selected group:\n Allegiance selected\n It has 25 ids')
+var.set('status of selected group:\n None selected\n It has 0 ids')
 Label(textvariable=var,background='green').grid(row=5)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
