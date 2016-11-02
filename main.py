@@ -14,6 +14,8 @@ for line in f:
         list_of_groups.append(line[5:-1])
 f.close()
 
+selected_accounts = [] # updates whenever a group is selected... 
+
 def get_accounts(g):
     result = []
     with open('db.txt','r') as ff:
@@ -113,19 +115,35 @@ add_id_button.grid(row=0,column=0)
 
 # ........... list box ................
 def trigger(event=None):
-    print('triggered!')
+    global selected_accounts
     meow = group_list.get(group_list.curselection()[0])
-    var.set('status of selected group:\n '+ meow + ' selected\n It has n ids')
+    if meow != 'All Accounts':
+        selected_accounts = get_accounts(meow)
+        if len(get_accounts(meow)) == 1:
+            var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(get_accounts(meow)))+' id')
+        else:
+            var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(get_accounts(meow)))+' ids')
+    else:
+        n = 0
+        selected_accounts=[]
+        for i in list_of_groups:
+            selected_accounts+=get_accounts(i)
+            n+= len(get_accounts(i))
+        var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(n)+' ids')
+    print(selected_accounts)
+
+
 
 
 group_list = Listbox(root,height=15,background="pink")
 group_list.grid(row=1,column=0)
-for item in ["All accounts", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four", "two", "three", "four"]:
+group_list.insert(END, 'All Accounts')
+for item in list_of_groups:
     group_list.insert(END, item)
 
 group_list.bind('<<ListboxSelect>>',trigger)
 
-# .............. list box
+# .............. list box .......
 
 ttk.Button(root,text="Expand Selected Group",command=expand_selected_group).grid(row=2,column=0)
 ttk.Button(root,text="Add new group",command=add_new_group).grid(row=3,column=0)
