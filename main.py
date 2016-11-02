@@ -14,7 +14,7 @@ for line in f:
         list_of_groups.append(line[5:-1])
 f.close()
 
-selected_accounts = [] # updates whenever a group is selected... 
+selected_accounts = [] # updates whenever a group is selected...
 
 def get_accounts(g):
     result = []
@@ -120,16 +120,14 @@ def trigger(event=None):
     if meow != 'All Accounts':
         selected_accounts = get_accounts(meow)
         if len(get_accounts(meow)) == 1:
-            var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(get_accounts(meow)))+' id')
+            var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' id')
         else:
-            var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(get_accounts(meow)))+' ids')
+            var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' ids')
     else:
-        n = 0
         selected_accounts=[]
         for i in list_of_groups:
             selected_accounts+=get_accounts(i)
-            n+= len(get_accounts(i))
-        var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(n)+' ids')
+        var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' ids')
     print(selected_accounts)
 
 
