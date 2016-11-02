@@ -15,6 +15,7 @@ for line in f:
 f.close()
 
 selected_accounts = [] # updates whenever a group is selected...
+selected_group = None # will also be none when "All Accounts" is selected
 
 def get_accounts(g):
     result = []
@@ -48,7 +49,92 @@ def get_accounts(g):
             return result
 
 def add_new_account():
-    pass
+    global selected_accounts
+    global var
+    global selected_group
+
+    if selected_group == None:
+
+        top = Toplevel(root)
+        top.title("Can't Add Account")
+
+        msg = Label(top, text='Cannot add account.\nYou must select a group (which is not All Accounts)')
+        msg.pack()
+
+        button = ttk.Button(top, text="Okay", command=top.destroy)
+        button.pack()
+    else:
+        top = Toplevel(root)
+        top.title('Add Account')
+        msg = Label(top, text='Add an account by typing correct username and password\n Account will be added to the group : '+selected_group)
+        msg.grid(row=0,column=0,columnspan=2)
+
+        Label(top,text='Username : ').grid(row=1,column=0)
+        username = Entry(top)
+        username.grid(row=1,column=1)
+
+        Label(top,text='Password : ').grid(row=2,column=0)
+        password = Entry(top)
+        password.grid(row=2,column=1)
+
+        def new_account():
+            global selected_accounts
+            global selected_group
+            global var
+            u = username.get()
+            p = password.get()
+
+            if (u or p) == '':
+                topp = Toplevel(top)
+                topp.title('Error')
+                msg = Label(topp, text='Cant add account\n You must add both username and password')
+                msg.pack()
+                ttk.Button(topp,text="Okay",command=topp.destroy).pack()
+            else:
+                top.destroy()
+                topp = Toplevel()
+                topp.title('Success')
+                msg = Label(topp, text='    Congo,the account with email '+u+' is added to the group '+selected_group+'   ')
+                msg.pack()
+
+                #  adding account to the database(file basically) and the global variable
+                new_content =''
+                f = open('db.txt','r')
+                ant = 0
+                to_match = 'GROUP'+selected_group+'\n'
+                for i in f:
+                    if i == to_match:
+                        ant = 1
+                        new_content+=i
+                        continue
+                    if ant == 0:
+                        new_content+=i
+                    if ant == 1:
+                        ant = 0
+                        new_content+= i.replace('\n',' ')+u+' '+p+'\n'
+                f.close()
+                f = open('db.txt','w')
+                f.write(new_content)
+                f.close()
+
+                selected_accounts = []
+                selected_group = None
+
+
+
+
+                # updating the group waala status bar ( changing var variable)
+                var.set('status of selected group:\n None selected\n It has 0 ids')
+
+                ttk.Button(topp,text="Okay",command=topp.destroy).pack()
+
+        ttk.Button(top,text="Submit",command=new_account).grid(row=3,columnspan=2)
+
+
+
+
+
+
 
 def expand_selected_group():
     pass
@@ -116,19 +202,24 @@ add_id_button.grid(row=0,column=0)
 # ........... list box ................
 def trigger(event=None):
     global selected_accounts
+    global selected_group
     meow = group_list.get(group_list.curselection()[0])
     if meow != 'All Accounts':
+        selected_group = meow
         selected_accounts = get_accounts(meow)
         if len(get_accounts(meow)) == 1:
             var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' id')
         else:
             var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' ids')
     else:
+        selected_group = None
         selected_accounts=[]
         for i in list_of_groups:
             selected_accounts+=get_accounts(i)
         var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' ids')
-    print(selected_accounts)
+    #print(selected_accounts)
+    #print()
+    #print(selected_group)
 
 
 
@@ -177,6 +268,4 @@ scrl = Scrollbar(root, command=status_bar_right.yview)
 status_bar_right.config(yscrollcommand=scrl.set)
 scrl.grid(row=5, column=8, sticky='n s')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 root.mainloop()
