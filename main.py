@@ -111,7 +111,10 @@ def add_new_account():
                         new_content+=i
                     if ant == 1:
                         ant = 0
-                        new_content+= i.replace('\n',' ')+u+' '+p+'\n'
+                        if len(i) >1:
+                            new_content+= i.replace('\n',' ')+u+' '+p+'\n'
+                        else:
+                            new_content+=i.replace('\n','')+u+' '+p+'\n'
                 f.close()
                 f = open('db.txt','w')
                 f.write(new_content)
@@ -137,10 +140,74 @@ def add_new_account():
 
 
 def expand_selected_group():
-    pass
+    top = Toplevel(root)
+    
 
 def add_new_group():
-    pass
+    global list_of_groups
+    global group_list
+
+    # popup asking for new groups name.
+    top = Toplevel(root)
+    top.title("Add New Group")
+    Label(top,text='').grid(row=0)
+    msg = Label(top, text='Enter the name of the group you want to add : ')
+    msg.grid(row=1)
+    group_name = Entry(top)
+    group_name.grid(row=2)
+
+
+    def add_group():
+        global list_of_groups
+        global group_list
+        g = group_name.get()
+        # file updated.
+        f = open('db.txt','r')
+        old = f.read()
+        f.close()
+        print(old)
+        new = old+ 'GROUP'+g+'\n\n'
+
+        f = open('db.txt','w')
+        f.write(new)
+        f.close()
+
+        f= open('db.txt','r')
+        list_of_groups = []
+        for line in f:
+            if line[:5]=='GROUP':
+                list_of_groups.append(line[5:-1])
+        f.close()
+
+        # listbox updated.
+        group_list.delete(0, END)
+        group_list.insert(END, 'All Accounts')
+        for item in list_of_groups:
+            group_list.insert(END, item)
+
+        top.destroy()
+        global selected_group,selected_accounts,var
+
+        selected_accounts = []
+        selected_group = None
+        var.set('status of selected group:\n None selected\n It has 0 ids')
+
+
+
+
+
+
+
+
+
+
+    ttk.Button(top,text='Add Group',command=add_group).grid(row=3)
+    Label(top,text='').grid(row=4)
+
+
+
+
+
 
 def message_to_all_friends():
     pass
@@ -268,4 +335,8 @@ scrl = Scrollbar(root, command=status_bar_right.yview)
 status_bar_right.config(yscrollcommand=scrl.set)
 scrl.grid(row=5, column=8, sticky='n s')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
 root.mainloop()
