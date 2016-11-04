@@ -16,6 +16,7 @@ f.close()
 
 selected_accounts = [] # updates whenever a group is selected...
 selected_group = None # will also be none when "All Accounts" is selected
+sa = None # selected account when group is expanded. it's global for a reason.
 
 def get_accounts(g):
     result = []
@@ -135,13 +136,122 @@ def add_new_account():
 
 
 
-
-
-
-
 def expand_selected_group():
+    global sa
+    sa = None
+    global list_of_groups
+    global selected_group
+    global group_list
+    if selected_group==None:
+        top = Toplevel(root)
+        top.title("Error")
+        Label(top,text='').grid(row=0)
+        Label(top,text='You must select a group!').grid(row=1)
+        Label(top,text='').grid(row=2)
+        ttk.Button(top,text='Okay',command=top.destroy).grid(row=3)
+        return
     top = Toplevel(root)
-    
+    top.title("Group settings - "+selected_group)
+    Label(top,text='').grid(row=0)
+    if len(selected_accounts)!=1:
+        Label(top, text='         The group {} has {} accounts :        '.format(selected_group,str(len(selected_accounts)))).grid(row=1,column=0)
+    else:
+        Label(top, text='         The group {} has {} account :        '.format(selected_group,str(len(selected_accounts)))).grid(row=1,column=0)
+    Label(top,text='').grid(row=2)
+
+    acc_list = Listbox(top,height=15,background="pink")
+    acc_list.grid(row=3,column=0)
+    for item in selected_accounts:
+        acc_list.insert(END, item[0])
+
+    Label(top,text='').grid(row=4)
+
+    def boom(event=None):
+        global sa
+        sa = acc_list.get(acc_list.curselection()[0])
+
+    acc_list.bind('<<ListboxSelect>>',boom)
+
+    def delete_selected_account():
+        if sa == None:
+            
+
+    ttk.Button(top,text='Delete Selected account from group',command=delete_selected_account).grid(row=5)
+
+    def delete_complete_group():
+        global selected_group,selected_accounts
+        global list_of_groups
+        global group_list
+        topp = Toplevel(top)
+        topp.title('Confirmation')
+        Label(topp,text='').grid(row=0,columnspan=2)
+        Label(topp,text='   This action will also delete all the accounts inside the group   ').grid(row=1,columnspan=2)
+        Label(topp,text='   Are you sure you want to delete this group?   ').grid(row=2,columnspan=2)
+        Label(topp,text='').grid(row=3)
+        def destroy_group():
+            global selected_group,selected_accounts
+            global group_list
+
+            # closing the fucking popups
+            topp.destroy()
+            top.destroy()
+
+            # destroying the group from the file
+            new =''
+            f = open('db.txt','r')
+            tick = 0
+            for line in f:
+                if line == 'GROUP'+selected_group+'\n':
+                    tick = 1
+                    continue
+                if tick == 0:
+                    new += line
+                if tick == 1:
+                    tick = 0
+
+            f.close()
+            f = open('db.txt','w')
+            f.write(new)
+            f.close()
+
+            # updating the global variables selected_group and selected_accounts
+            selected_group=None
+            selected_accounts = []
+
+
+            # Updating the listbox
+            global list_of_groups
+            f= open('db.txt','r')
+            list_of_groups = []
+            for line in f:
+                if line[:5]=='GROUP':
+                    list_of_groups.append(line[5:-1])
+            f.close()
+
+            global group_list
+
+            group_list.delete(0, END)
+            group_list.insert(END, 'All Accounts')
+            for item in list_of_groups:
+                group_list.insert(END, item)
+
+
+
+
+            # updating the groups status bar
+            global var
+            var.set('status of selected group:\n None selected\n It has 0 ids')
+
+
+
+        ttk.Button(topp,text='yes',command=destroy_group).grid(row=4,column=0)
+        ttk.Button(topp,text='no',command=topp.destroy).grid(row=4,column=1)
+
+
+
+    ttk.Button(top,text='Delete the complete Group',command=delete_complete_group).grid(row=6)
+
+
 
 def add_new_group():
     global list_of_groups
@@ -193,19 +303,8 @@ def add_new_group():
         var.set('status of selected group:\n None selected\n It has 0 ids')
 
 
-
-
-
-
-
-
-
-
     ttk.Button(top,text='Add Group',command=add_group).grid(row=3)
     Label(top,text='').grid(row=4)
-
-
-
 
 
 
@@ -239,12 +338,10 @@ root.title("Facebook Multiple Accounts Manager")
 root.geometry('1100x650+000+000')
 #root.resizable(width=False,height=False)
 
-
 # styling (button)
 style = ttk.Style()
 style.configure('TButton',foreground="black",font="Symbol 12 bold",padding=20)
 #styling ends
-
 
 
 # ~~~~~~~~~~~~~~~~~ MENU BAR STARTS ~~~~~~~~~~~~~~~~~~
@@ -287,8 +384,6 @@ def trigger(event=None):
     #print(selected_accounts)
     #print()
     #print(selected_group)
-
-
 
 
 group_list = Listbox(root,height=15,background="pink")
@@ -335,8 +430,6 @@ scrl = Scrollbar(root, command=status_bar_right.yview)
 status_bar_right.config(yscrollcommand=scrl.set)
 scrl.grid(row=5, column=8, sticky='n s')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 
 
 root.mainloop()
