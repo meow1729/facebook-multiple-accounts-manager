@@ -228,7 +228,7 @@ def expand_selected_group():
                     #print(len(for_modified_line))
 
                     if len(for_modified_line) > 0:
-                        
+
                         modified_line=''
                         for i in for_modified_line:
                             modified_line+=(i+' ')
@@ -480,6 +480,12 @@ def trigger(event=None):
         selected_accounts=[]
         for i in list_of_groups:
             selected_accounts+=get_accounts(i)
+        
+        temp = []
+        for i in selected_accounts:
+            if i not in temp:
+                temp.append(i)
+        selected_accounts = temp
         var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' ids')
     print(selected_accounts)
     #print()
