@@ -137,7 +137,7 @@ def add_new_account():
 
 
 def expand_selected_group():
-    global sa
+    global sa,var,selected_accounts
     sa = None
     global list_of_groups
     global selected_group
@@ -146,17 +146,20 @@ def expand_selected_group():
         top = Toplevel(root)
         top.title("Error")
         Label(top,text='').grid(row=0)
-        Label(top,text='You must select a group!').grid(row=1)
+        Label(top,text='     You must select a group!     ').grid(row=1)
         Label(top,text='').grid(row=2)
         ttk.Button(top,text='Okay',command=top.destroy).grid(row=3)
         return
     top = Toplevel(root)
     top.title("Group settings - "+selected_group)
     Label(top,text='').grid(row=0)
+    zoom = StringVar()
     if len(selected_accounts)!=1:
-        Label(top, text='         The group {} has {} accounts :        '.format(selected_group,str(len(selected_accounts)))).grid(row=1,column=0)
+        Label(top, textvariable=zoom).grid(row=1,column=0)
+        zoom.set('         The group {} has {} accounts :        '.format(selected_group,str(len(selected_accounts))))
     else:
-        Label(top, text='         The group {} has {} account :        '.format(selected_group,str(len(selected_accounts)))).grid(row=1,column=0)
+        Label(top, textvariable=zoom).grid(row=1,column=0)
+        zoom.set('         The group {} has {} account :        '.format(selected_group,str(len(selected_accounts))))
     Label(top,text='').grid(row=2)
 
     acc_list = Listbox(top,height=15,background="pink")
@@ -173,8 +176,104 @@ def expand_selected_group():
     acc_list.bind('<<ListboxSelect>>',boom)
 
     def delete_selected_account():
+        global sa,var,selected_accounts
         if sa == None:
-            
+            topp = Toplevel(top)
+            topp.title('Error')
+
+            Label(topp,text='').grid(row=0)
+            Label(topp,text='     You must select an account!     ').grid(row=1)
+            Label(topp,text='').grid(row=2)
+            ttk.Button(topp,text='Okay',command=topp.destroy).grid(row=3)
+            return
+
+        topp = Toplevel(top)
+        topp.title('Confirmation')
+
+        Label(topp,text='').grid(row=0,columnspan=2)
+        Label(topp,text='     Are you sure you want to delete {} from group {} ?   '.format(sa,selected_group)).grid(row=1,columnspan=2)
+        Label(topp,text='').grid(row=2,columnspan=2)
+        def destroy_account():
+            global sa,var,selected_accounts
+
+            # removing the fucking popup ka popup (topp)
+            topp.destroy()
+
+            # deleting the account from the file, ( only from the selected group )
+            new = ''
+            f= open('db.txt','r')
+            tick = 0
+            for line in f:
+                if line == 'GROUP'+selected_group+'\n':
+                    new += line
+                    tick = 1
+                    continue
+                if tick == 0:
+                    new += line
+                if tick == 1:
+                    tick = 0
+                    l =line.split(' ')
+
+                    for_modified_line=[]
+                    pick = 0
+                    for i in l:
+                        if i == sa:
+                            pick = 1
+                            continue
+                        if pick == 0:
+                            for_modified_line.append(i)
+                        if pick == 1:
+                            pick = 0
+                    print(len(for_modified_line))
+
+                    if len(for_modified_line) > 0:
+                        for_modified_line[-1]=for_modified_line[-1][:-1]
+                        modified_line=''
+                        for i in for_modified_line:
+                            modified_line+=(i+' ')
+                        modified_line= modified_line[:-1]+'\n'
+                    else:
+                        modified_line='\n'
+
+                    new+=modified_line
+            f.close()
+
+            f = open('db.txt','w')
+            f.write(new)
+            f.close()
+
+            # updating sa and ..
+            # updating selected_accounts variable
+            for item in selected_accounts:
+                if item[0]==sa:
+                    selected_accounts.remove(item)
+                    break
+            sa = None
+
+            # updating var for updating status bar
+            if len(selected_accounts) == 1:
+                var.set('status of selected group:\n '+ selected_group + ' selected\n It has '+str(len(selected_accounts))+' id')
+            else:
+                var.set('status of selected group:\n '+ selected_group + ' selected\n It has '+str(len(selected_accounts))+' ids')
+
+            # updating the listbox of the top popup
+            acc_list.delete(0, END)
+            for item in selected_accounts:
+                acc_list.insert(END, item[0])
+
+            # updating the uppar waala text of the top popup
+            if len(selected_accounts)!=1:
+                zoom.set('         The group {} has {} accounts :        '.format(selected_group,str(len(selected_accounts))))
+            else:
+                zoom.set('         The group {} has {} account :        '.format(selected_group,str(len(selected_accounts))))
+
+        ttk.Button(topp,text="Yes",command=destroy_account).grid(row=3,column=0)
+        ttk.Button(topp,text="No",command=topp.destroy).grid(row=3,column=1)
+
+
+
+
+
 
     ttk.Button(top,text='Delete Selected account from group',command=delete_selected_account).grid(row=5)
 
@@ -275,7 +374,7 @@ def add_new_group():
         f = open('db.txt','r')
         old = f.read()
         f.close()
-        print(old)
+        #print(old)
         new = old+ 'GROUP'+g+'\n\n'
 
         f = open('db.txt','w')
