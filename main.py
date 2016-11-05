@@ -213,6 +213,7 @@ def expand_selected_group():
                 if tick == 1:
                     tick = 0
                     l =line.split(' ')
+                    l[-1] = l[-1][:-1]
 
                     for_modified_line=[]
                     pick = 0
@@ -224,10 +225,10 @@ def expand_selected_group():
                             for_modified_line.append(i)
                         if pick == 1:
                             pick = 0
-                    print(len(for_modified_line))
+                    #print(len(for_modified_line))
 
                     if len(for_modified_line) > 0:
-                        for_modified_line[-1]=for_modified_line[-1][:-1]
+                        
                         modified_line=''
                         for i in for_modified_line:
                             modified_line+=(i+' ')
@@ -480,7 +481,7 @@ def trigger(event=None):
         for i in list_of_groups:
             selected_accounts+=get_accounts(i)
         var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' ids')
-    #print(selected_accounts)
+    print(selected_accounts)
     #print()
     #print(selected_group)
 
