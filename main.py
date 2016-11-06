@@ -599,7 +599,71 @@ def send_friend_requests():
 
 
 def get_info():
-    pass
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        return
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will get information of all the {} accounts of the selected group from the internet and may take some time.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will get information of all the accounts of the selected group from the internet and may take some time.    \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def get():
+        top.destroy()
+
+        total_friends_request = 0
+        total_friends = 0
+
+        output_to_widget('Staring information retrieval ... \n\n')
+
+        for t in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(t[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(t[1])
+            passElem.submit()
+
+
+            driver.get('http://facebook.com/me/friends')
+            try:
+                nof = driver.find_element_by_css_selector('._gs6')
+                output_to_widget('id with email '+t[0]+' has friends = '+ str(nof.text)+'\n')
+                total_friends+= int(nof.text)
+            except:
+                output_to_widget('Unable to login on {}, incorrect password or something.. \n\n'.format(t[0]))
+                continue
+
+
+            driver.get('https://www.facebook.com/friends/requests/')
+
+            butts = driver.find_elements_by_tag_name('button')
+
+
+            good_butts = []
+
+            for i in butts:
+                if 'Confirm' in i.text:
+                    good_butts.append(i)
+            total_friends_request += len(good_butts)
+            output_to_widget('id with email '+t[0]+' has friends requests = '+str(len(good_butts))+'\n\n')
+
+            driver.close()
+        output_to_widget('all ids in the selected group {} has {} friends \n'.format(selected_group,str(total_friends)))
+        output_to_widget('all ids in the selected group {} has {} friend requests \n\n'.format(selected_group,str(total_friends_request)))
+        output_to_widget('process completed!!!\n\n')
+
+
+
+
+
+    ttk.Button(top,text='Yes',command=get).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
 
 
 
