@@ -538,7 +538,7 @@ def accept_friend_requests():
             #driver.get_screenshot_as_file('meow2.png') # the final state
             driver.close()
             output_to_widget('accepted {} pending friend requests in account with email {} ..\n'.format(str(len(good_butts)),t[0]))
-        output_to_widget('\nProcess Complete! \n')
+        output_to_widget('\nProcess Complete! \n\n')
 
 
     ttk.Button(top,text='Yes',command=accept).grid(row=3,column=0)
@@ -547,7 +547,56 @@ def accept_friend_requests():
 
 
 def send_friend_requests():
-    pass
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        return
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will send friend requests to people you may know on all {} accounts of the selected group.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will send friend requests to people you may know on all accounts of the selected group.     \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def send():
+        top.destroy()
+        for t in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(t[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(t[1])
+            passElem.submit()
+
+
+            driver.get('https://www.facebook.com/friends/requests/')
+
+            if driver.current_url != 'https://www.facebook.com/friends/requests/':
+                output_to_widget('Unable to login on {}, incorrect password or something.. \n'.format(t[0]))
+                continue
+
+            butts = driver.find_elements_by_tag_name('button')
+
+            good_butts = []
+
+            for i in butts:
+                if 'Add Friend' in i.text:
+                    good_butts.append(i)
+
+
+            for i in good_butts:
+                i.click()
+
+            driver.close()
+            output_to_widget('sent {} friend requests to people you may know in account with email {} ..\n'.format(str(len(good_butts)),t[0]))
+        output_to_widget('\nProcess Complete! \n\n')
+
+    ttk.Button(top,text='Yes',command=send).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
+
 
 def get_info():
     pass
@@ -616,7 +665,7 @@ def trigger(event=None):
                 temp.append(i)
         selected_accounts = temp
         var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' ids')
-    print(selected_accounts)
+    #print(selected_accounts)
     #print()
     #print(selected_group)
 
