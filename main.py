@@ -421,7 +421,7 @@ def message_to_all_friends():
 def post_to_the_wall():
 
     if len(selected_accounts)==0:
-        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        messagebox.showwarning('Error',"You must select a group with finite number of accounts.")
         return
 
     if box.get("1.0",'end-1c') == '':
@@ -474,7 +474,77 @@ def post_to_the_wall():
 
 
 def accept_friend_requests():
-    pass
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        return
+
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will accept friend requests on all {} accounts of the selected group.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will accept friend requests on all accounts of the selected group.     \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def accept():
+        top.destroy()
+        output_to_widget('starting the process of accepting friend requests from all accounts ....\n')
+        for t in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(t[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(t[1])
+            passElem.submit()
+
+            driver.get('https://www.facebook.com/friends/requests/')
+            if driver.current_url != 'https://www.facebook.com/friends/requests/':
+                output_to_widget('Unable to login on {}, incorrect password or something.. \n'.format(t[0]))
+                continue
+            try:
+                nopf = driver.find_element_by_css_selector('#u_0_1o > h2:nth-child(1)')
+                friendrequests = ''
+                for i in nopf.text:
+                    if i in '0123456789':
+                        friendrequests+=i
+            except:
+                friendrequests=0
+            try:
+                friendrequests=int(friendrequests)
+            except:
+                friendrequests=0
+
+            #print('friend requests : '+str(friendrequests))
+
+            butts = driver.find_elements_by_tag_name('button')
+
+            #print(len(butts))
+
+            good_butts = []
+
+            for i in butts:
+                if 'Confirm' in i.text:
+                    good_butts.append(i)
+
+            #print(len(good_butts))
+
+            for i in good_butts:
+                i.click()
+
+
+            #driver.get_screenshot_as_file('meow2.png') # the final state
+            driver.close()
+            output_to_widget('accepted {} pending friend requests in account with email {} ..\n'.format(str(len(good_butts)),t[0]))
+        output_to_widget('\nProcess Complete! \n')
+
+
+    ttk.Button(top,text='Yes',command=accept).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
+
+
 
 def send_friend_requests():
     pass
