@@ -2,6 +2,8 @@ from tkinter import *
 from tkinter import messagebox # for displaying messagebox
 from tkinter import ttk # for styling
 from tkinter import Text
+from selenium import webdriver
+import time
 
 
 f = open('db.txt','a')
@@ -17,6 +19,11 @@ f.close()
 selected_accounts = [] # updates whenever a group is selected...
 selected_group = None # will also be none when "All Accounts" is selected
 sa = None # selected account when group is expanded. it's global for a reason.
+
+
+def output_to_widget(message):
+    status_bar_right.insert(INSERT, message)
+    status_bar_right.see(END)
 
 def get_accounts(g):
     result = []
@@ -412,7 +419,59 @@ def message_to_all_friends():
     pass
 
 def post_to_the_wall():
-    pass
+
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        return
+
+    if box.get("1.0",'end-1c') == '':
+        messagebox.showwarning('Error','You need to type something in the box to post on the wall. Its empty right now')
+        return
+
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will post the message to the wall on all {} accounts of the selected group.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will post the message to the wall on all accounts of the selected group.     \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def post_wall():
+        top.destroy()
+        output_to_widget('Starting process....\n\n')
+        for i in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(i[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(i[1])
+            passElem.submit()
+
+            driver.get('https://mbasic.facebook.com/')
+
+            try:
+
+                p = driver.find_element_by_css_selector('textarea')
+                p.send_keys(box.get("1.0",'end-1c'))
+                a= driver.find_element_by_css_selector('#mbasic_inline_feed_composer > form > table > tbody > tr > td.m > div > input')
+                a.click()
+
+
+                driver.close()
+                output_to_widget('Posted on the wall on id with username :'+i[0]+' ...\n')
+            except:
+                output_to_widget('Unable to post on the wall on id with username :'+i[0]+' ...\n')
+        output_to_widget('\nProcess Complete! \n')
+
+
+
+    ttk.Button(top,text='Yes',command=post_wall).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
+
+
 
 def accept_friend_requests():
     pass
@@ -480,7 +539,7 @@ def trigger(event=None):
         selected_accounts=[]
         for i in list_of_groups:
             selected_accounts+=get_accounts(i)
-        
+
         temp = []
         for i in selected_accounts:
             if i not in temp:
