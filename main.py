@@ -416,7 +416,107 @@ def add_new_group():
 
 
 def message_to_all_friends():
-    pass
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        return
+
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will send message to all friends on all {} accounts of the selected group.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will accept friend requests on all accounts of the selected group.     \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def message():
+        top.destroy()
+        output_to_widget('starting ...\n\n')
+        for t in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+            #logging in
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(t[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(t[1])
+            passElem.submit()
+
+
+            # getting number of friends in variable nof as integer
+            driver.get('http://facebook.com/me/friends')
+            try:
+                nof = driver.find_element_by_css_selector('._gs6')
+                nof = int(nof.text)
+            except:
+                output_to_widget('Unable to login on {}, incorrect password or something.. \n'.format(t[0]))
+                continue
+            #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+            #getting list of friends url in links ~~~~~~~~~~
+            driver.get('https://m.facebook.com/profile.php?v=friends')
+            nice_hyperlinks=[]
+
+            while len(nice_hyperlinks) <= nof-5:
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(1)
+
+                #print('tick')
+                #print(len(nice_hyperlinks))
+                nice_hyperlinks = []
+
+                hyperlinks = driver.find_elements_by_tag_name('a')
+                for i in hyperlinks:
+                    if i.text !='' and i.text != 'Find Friends' and i.text != 'Active Friends' and i.text != 'Public' and i.text!= 'Only Me':
+                        nice_hyperlinks.append(i)
+
+            #print('lenght of hypelinks : '+str(len(nice_hyperlinks)))
+
+            links = []
+            for i in nice_hyperlinks:
+                links.append(    str( i.get_attribute('href'))[0:8] +   str(i.get_attribute('href'))[10:]  )
+
+
+            #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+            # sending message to friends~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            message =  box.get("1.0",'end-1c')
+
+            for i in links:
+
+                message_link = (i)[0:21]+'messages/'+(i)[21:]
+                #print(message_link)
+                driver.get(message_link)
+
+                try:
+                    boxx = driver.find_element_by_css_selector('textarea')
+
+                    boxx.send_keys(message)
+
+                    send_buttonsssss = driver.find_elements_by_tag_name('input')
+
+                    new = ''
+                    for j in send_buttonsssss:
+                        if j.get_attribute('value') == 'Send' or j.get_attribute('value') == 'Reply':
+                            new = j
+                            new.click()
+                            break
+                except:
+                    continue
+
+
+            driver.close()
+            output_to_widget('messages sent to friends with email {} \n\n'.format(t[0]))
+        output_to_widget('Process complete!..\n\n')
+
+    ttk.Button(top,text='Yes',command=message).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
+
 
 def post_to_the_wall():
 
