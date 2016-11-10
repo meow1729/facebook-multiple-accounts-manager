@@ -420,6 +420,10 @@ def message_to_all_friends():
         messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
         return
 
+    if box.get("1.0",'end-1c') == '':
+        messagebox.showwarning('Error','You need to type something in the box to send to friends. Its empty right now')
+        return
+
     top = Toplevel(root)
     Label(top,text='').grid(row=0,columnspan=2)
     if len(selected_accounts) > 1:
