@@ -2,6 +2,8 @@ from tkinter import *
 from tkinter import messagebox # for displaying messagebox
 from tkinter import ttk # for styling
 from tkinter import Text
+from selenium import webdriver
+import time
 
 
 f = open('db.txt','a')
@@ -17,6 +19,11 @@ f.close()
 selected_accounts = [] # updates whenever a group is selected...
 selected_group = None # will also be none when "All Accounts" is selected
 sa = None # selected account when group is expanded. it's global for a reason.
+
+
+def output_to_widget(message):
+    status_bar_right.insert(INSERT, message)
+    status_bar_right.see(END)
 
 def get_accounts(g):
     result = []
@@ -409,19 +416,358 @@ def add_new_group():
 
 
 def message_to_all_friends():
-    pass
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        return
+
+    if box.get("1.0",'end-1c') == '':
+        messagebox.showwarning('Error','You need to type something in the box to send to friends. Its empty right now')
+        return
+
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will send message to all friends on all {} accounts of the selected group.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will accept friend requests on all accounts of the selected group.     \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def message():
+        top.destroy()
+        output_to_widget('starting ...\n\n')
+        for t in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+            #logging in
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(t[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(t[1])
+            passElem.submit()
+
+
+            # getting number of friends in variable nof as integer
+            driver.get('http://facebook.com/me/friends')
+            try:
+                nof = driver.find_element_by_css_selector('._gs6')
+                nof = int(nof.text)
+            except:
+                output_to_widget('Unable to login on {}, incorrect password or something.. \n'.format(t[0]))
+                continue
+            #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+            #getting list of friends url in links ~~~~~~~~~~
+            driver.get('https://m.facebook.com/profile.php?v=friends')
+            nice_hyperlinks=[]
+
+            while len(nice_hyperlinks) <= nof-5:
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(1)
+
+                #print('tick')
+                #print(len(nice_hyperlinks))
+                nice_hyperlinks = []
+
+                hyperlinks = driver.find_elements_by_tag_name('a')
+                for i in hyperlinks:
+                    if i.text !='' and i.text != 'Find Friends' and i.text != 'Active Friends' and i.text != 'Public' and i.text!= 'Only Me':
+                        nice_hyperlinks.append(i)
+
+            #print('lenght of hypelinks : '+str(len(nice_hyperlinks)))
+
+            links = []
+            for i in nice_hyperlinks:
+                links.append(    str( i.get_attribute('href'))[0:8] +   str(i.get_attribute('href'))[10:]  )
+
+
+            #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+            # sending message to friends~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            message =  box.get("1.0",'end-1c')
+
+            for i in links:
+
+                message_link = (i)[0:21]+'messages/'+(i)[21:]
+                #print(message_link)
+                driver.get(message_link)
+
+                try:
+                    boxx = driver.find_element_by_css_selector('textarea')
+
+                    boxx.send_keys(message)
+
+                    send_buttonsssss = driver.find_elements_by_tag_name('input')
+
+                    new = ''
+                    for j in send_buttonsssss:
+                        if j.get_attribute('value') == 'Send' or j.get_attribute('value') == 'Reply':
+                            new = j
+                            new.click()
+                            break
+                except:
+                    continue
+
+
+            driver.close()
+            output_to_widget('messages sent to friends with email {} \n\n'.format(t[0]))
+        output_to_widget('Process complete!..\n\n')
+
+    ttk.Button(top,text='Yes',command=message).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
+
 
 def post_to_the_wall():
-    pass
+
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"You must select a group with finite number of accounts.")
+        return
+
+    if box.get("1.0",'end-1c') == '':
+        messagebox.showwarning('Error','You need to type something in the box to post on the wall. Its empty right now')
+        return
+
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will post the message to the wall on all {} accounts of the selected group.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will post the message to the wall on all accounts of the selected group.     \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def post_wall():
+        top.destroy()
+        output_to_widget('Starting process....\n\n')
+        for i in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(i[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(i[1])
+            passElem.submit()
+
+            driver.get('https://mbasic.facebook.com/')
+
+            try:
+
+                p = driver.find_element_by_css_selector('textarea')
+                p.send_keys(box.get("1.0",'end-1c'))
+                a= driver.find_element_by_css_selector('#mbasic_inline_feed_composer > form > table > tbody > tr > td.m > div > input')
+                a.click()
+
+
+                driver.close()
+                output_to_widget('Posted on the wall on id with username :'+i[0]+' ...\n')
+            except:
+                output_to_widget('Unable to post on the wall on id with username :'+i[0]+' ...\n')
+        output_to_widget('\nProcess Complete! \n')
+
+
+
+    ttk.Button(top,text='Yes',command=post_wall).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
+
+
 
 def accept_friend_requests():
-    pass
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        return
+
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will accept friend requests on all {} accounts of the selected group.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will accept friend requests on all accounts of the selected group.     \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def accept():
+        top.destroy()
+        output_to_widget('starting the process of accepting friend requests from all accounts ....\n')
+        for t in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(t[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(t[1])
+            passElem.submit()
+
+            driver.get('https://www.facebook.com/friends/requests/')
+            if driver.current_url != 'https://www.facebook.com/friends/requests/':
+                output_to_widget('Unable to login on {}, incorrect password or something.. \n'.format(t[0]))
+                continue
+            try:
+                nopf = driver.find_element_by_css_selector('#u_0_1o > h2:nth-child(1)')
+                friendrequests = ''
+                for i in nopf.text:
+                    if i in '0123456789':
+                        friendrequests+=i
+            except:
+                friendrequests=0
+            try:
+                friendrequests=int(friendrequests)
+            except:
+                friendrequests=0
+
+            #print('friend requests : '+str(friendrequests))
+
+            butts = driver.find_elements_by_tag_name('button')
+
+            #print(len(butts))
+
+            good_butts = []
+
+            for i in butts:
+                if 'Confirm' in i.text:
+                    good_butts.append(i)
+
+            #print(len(good_butts))
+
+            for i in good_butts:
+                i.click()
+
+
+            #driver.get_screenshot_as_file('meow2.png') # the final state
+            driver.close()
+            output_to_widget('accepted {} pending friend requests in account with email {} ..\n'.format(str(len(good_butts)),t[0]))
+        output_to_widget('\nProcess Complete! \n\n')
+
+
+    ttk.Button(top,text='Yes',command=accept).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
+
+
 
 def send_friend_requests():
-    pass
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        return
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will send friend requests to people you may know on all {} accounts of the selected group.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will send friend requests to people you may know on all accounts of the selected group.     \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def send():
+        top.destroy()
+        for t in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(t[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(t[1])
+            passElem.submit()
+
+
+            driver.get('https://www.facebook.com/friends/requests/')
+
+            if driver.current_url != 'https://www.facebook.com/friends/requests/':
+                output_to_widget('Unable to login on {}, incorrect password or something.. \n'.format(t[0]))
+                continue
+
+            butts = driver.find_elements_by_tag_name('button')
+
+            good_butts = []
+
+            for i in butts:
+                if 'Add Friend' in i.text:
+                    good_butts.append(i)
+
+
+            for i in good_butts:
+                i.click()
+
+            driver.close()
+            output_to_widget('sent {} friend requests to people you may know in account with email {} ..\n'.format(str(len(good_butts)),t[0]))
+        output_to_widget('\nProcess Complete! \n\n')
+
+    ttk.Button(top,text='Yes',command=send).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
+
 
 def get_info():
-    pass
+    if len(selected_accounts)==0:
+        messagebox.showwarning('Error',"Please select a group with finite number of accounts.")
+        return
+    top = Toplevel(root)
+    Label(top,text='').grid(row=0,columnspan=2)
+    if len(selected_accounts) > 1:
+        Label(top,text='    This command will get information of all the {} accounts of the selected group from the internet and may take some time.     \n     Are you sure you want to continue?'.format(str(len(selected_accounts)))).grid(row=1,columnspan=2)
+    else:
+        Label(top,text='    This command will get information of all the accounts of the selected group from the internet and may take some time.    \n     Are you sure you want to continue?').grid(row=1,columnspan=2)
+    Label(top,text='').grid(row=2,columnspan=2)
+
+    def get():
+        top.destroy()
+
+        total_friends_request = 0
+        total_friends = 0
+
+        output_to_widget('Staring information retrieval ... \n\n')
+
+        for t in selected_accounts:
+            driver = webdriver.PhantomJS()
+            driver.get('http://facebook.com')
+
+
+            emailElem = driver.find_element_by_id('email')
+            emailElem.send_keys(t[0])
+            passElem = driver.find_element_by_id('pass')
+            passElem.send_keys(t[1])
+            passElem.submit()
+
+
+            driver.get('http://facebook.com/me/friends')
+            try:
+                nof = driver.find_element_by_css_selector('._gs6')
+                output_to_widget('id with email '+t[0]+' has friends = '+ str(nof.text)+'\n')
+                total_friends+= int(nof.text)
+            except:
+                output_to_widget('Unable to login on {}, incorrect password or something.. \n\n'.format(t[0]))
+                continue
+
+
+            driver.get('https://www.facebook.com/friends/requests/')
+
+            butts = driver.find_elements_by_tag_name('button')
+
+
+            good_butts = []
+
+            for i in butts:
+                if 'Confirm' in i.text:
+                    good_butts.append(i)
+            total_friends_request += len(good_butts)
+            output_to_widget('id with email '+t[0]+' has friends requests = '+str(len(good_butts))+'\n\n')
+
+            driver.close()
+        output_to_widget('all ids in the selected group {} has {} friends \n'.format(selected_group,str(total_friends)))
+        output_to_widget('all ids in the selected group {} has {} friend requests \n\n'.format(selected_group,str(total_friends_request)))
+        output_to_widget('process completed!!!\n\n')
+
+
+
+
+
+    ttk.Button(top,text='Yes',command=get).grid(row=3,column=0)
+    ttk.Button(top,text='No',command=top.destroy).grid(row=3,column=1)
 
 
 
@@ -480,14 +826,14 @@ def trigger(event=None):
         selected_accounts=[]
         for i in list_of_groups:
             selected_accounts+=get_accounts(i)
-        
+
         temp = []
         for i in selected_accounts:
             if i not in temp:
                 temp.append(i)
         selected_accounts = temp
         var.set('status of selected group:\n '+ meow + ' selected\n It has '+str(len(selected_accounts))+' ids')
-    print(selected_accounts)
+    #print(selected_accounts)
     #print()
     #print(selected_group)
 
