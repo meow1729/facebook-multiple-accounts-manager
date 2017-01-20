@@ -1,6 +1,3 @@
-TODO -
--> Bindings of"online" Functions 
-
 ## Installation
 
 * Run the following command in terminal:
