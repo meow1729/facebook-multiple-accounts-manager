@@ -3,7 +3,7 @@
 * Run the following command in terminal:
 
 ```bash
-git clone https://github.com/aradhyamakkar97/facebook-multiple-accounts-manager 
+git clone https://github.com/meow1729/facebook-multiple-accounts-manager 
 cd facebook-multiple-accounts-manager 
 brew install phantomjs
 pip3 install selenium
